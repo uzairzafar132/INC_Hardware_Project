@@ -1,0 +1,4 @@
+	  <Route path="/dev" element={<Dev />} />
+          <Route path="/basic-solution" element={<Basic />} />
+          <Route path="/inter-solution" element={<Inter />} />
+          <Route path="/advance-solution" element={<Advance />} />

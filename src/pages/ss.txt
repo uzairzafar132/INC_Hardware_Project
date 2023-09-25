@@ -1,0 +1,183 @@
+   {/* {Array.isArray(users) ? (
+            users.map((user) => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.id.Door}</td>
+                <td>{user.deviceToken}</td>
+                <td>{user.email}</td>
+                <td>{user.password}</td>
+                <td>
+                  {user.image && (
+                    <img
+                      src={user.image}
+                      alt="User"
+                      style={{ width: "50px" }}
+                    />
+                  )}
+                </td>
+                <td>
+                  <button onClick={() => handleEdit(user)}>Edit</button>
+                  <button onClick={() => handleDelete(user.id)}>Delete</button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="7">No users found</td>
+            </tr>
+          )} */}
+
+
+login router 
+ try {
+    const { email, password } = req.body;
+
+    //validate
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Not all feild have been enter",
+      });
+    }
+
+    //check email that enter and compare in our database
+    const user = await Users.findOne({ email: email });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "no account with this email are register" });
+    }
+
+    //checking password entered and comparing with hash password in database
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+
+      return res.status(400).json({ message: "invalide credental" });
+    }
+    //creating our json web token by passing user id and JWT_SECRET
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+
+    res.json({
+      token,
+      user
+    });
+  } catch (error) {
+    res.status(500).json({ err: error.message });
+  }
+
+ 
+
+router.post("/post", upload.single("image"), (req, res) => {
+  //
+   const { id, Door, deviceToken, deviceId, email, password } = req.body;
+  const userData = req.body;
+  console.log(req.body);
+  const userId = userData.id;
+  const file = req.file;
+  console.log(file);
+  if (req.file) {
+    
+    userData.image = req.file.path; 
+  }
+  const data = {
+    id,
+    Door,
+    deviceToken,
+    deviceId,
+    email,
+    password,
+    imageUrl: file.path, 
+  };
+
+  const usersRef = db.ref("Users");
+  const newUserRef = usersRef.child(userId);
+    newUserRef
+      .set(data)
+      .then(() => {
+        res.status(200).send("Upload successful!");
+      })
+      .catch((error) => {
+        console.error("Error uploading to the database:", error);
+        res.status(500).send("Upload failed.");
+      });
+});
+
+
+const bucket = admin.storage().bucket();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // Maximum file size (in bytes) - adjust as needed
+  },
+});
+
+router.post("/post", upload.single("image"), (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).send("No file uploaded.");
+  }
+  console.log(req.body);
+  const file = req.file;
+
+  // Create a unique filename for the uploaded image
+  const filename = `${Date.now()}-${file.originalname}`;
+
+  // Create a file reference in Firebase Storage
+  const storageFile = bucket.file(filename);
+
+  // Create a write stream to stream the file data to Firebase Storage
+  const stream = storageFile.createWriteStream({
+    metadata: {
+      contentType: file.mimetype,
+    },
+  });
+
+  // Handle write stream events
+  stream.on("error", (error) => {
+    console.error(error);
+    return res.status(500).send("An error occurred while uploading the file.");
+  });
+
+  stream.on("finish", () => {
+    // File upload is successful
+    const imageUrl = `https://storage.googleapis.com/${bucket.name}/${storageFile.name}`;
+    res.status(200).send(`Image uploaded. URL: ${imageUrl}`);
+  });
+
+  // Pipe the file data to the write stream
+  stream.end(file.buffer);
+});
+
+
+<TableBody>
+        {Object.entries(users).map(([userId, user]) => (
+          <TableRow key={userId}>
+            <TableCell>{userId}</TableCell>
+            <TableCell>{user.deviceId}</TableCell>
+            <TableCell>{user.Door}</TableCell>
+            <TableCell>{user.email}</TableCell>
+            <TableCell>{user.password}</TableCell>
+            <TableCell>
+              {/* {user.imageUrl && (
+                <img
+                  src={user.imageUrl}
+                  alt="Image"
+                  style={{ width: "50px", height: "50px" }}
+                />
+              )} */}
+              <QRcode userid={userId} />
+            </TableCell>
+            <TableCell>
+              <IconButton onClick={() => handleEdit(userId, user)}>
+                <EditIcon />
+              </IconButton>
+              <IconButton onClick={() => handleDelete(userId)}>
+                <DeleteIcon />
+              </IconButton>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+
+
+http://localhost:3000/
+ 

@@ -1,0 +1,10 @@
+#sidebar ul li:hover {
+
+    background-color: darkgray;
+    color: #ECEFF1;
+    width: -webkit-fill-available;
+}
+
+.logout-btn:hover{
+background-color: darkgray !important;
+}
